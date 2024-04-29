@@ -1,0 +1,7 @@
+{
+    "name": "EfipayPayments/Embebed",
+    "description": "Payments with credit cards efipay",
+    "require": {
+        "php": ">=7.4",
+    }
+}
