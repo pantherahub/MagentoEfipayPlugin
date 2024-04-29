@@ -1,0 +1,73 @@
+<?xml version="1.0"?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Config:etc/system_file.xsd">
+    <system>
+        <section id="payment" type="text" sortOrder="400" showInDefault="1" showInWebsite="1" showInStore="1">
+            <group id="Efipay" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
+				<!-- CONTENEDOR PRINCIPAL -->
+                <label>Efipay</label>
+                <comment> <![CDATA[Conéctate a nuestra pasarela de pagos para aumentar tus ventas. Acepta pago con tarjetas credito/debito, pagos en efectivo.]]> </comment>
+                <fieldset_css>efipay-other-section</fieldset_css>
+                <frontend_model>Magento\Paypal\Block\Adminhtml\System\Config\Fieldset\Payment</frontend_model>
+                <field id="info_block" translate="label" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0">
+                    <frontend_model>EfipayPayment\Embebed\Block\Adminhtml\Description</frontend_model>
+                </field>
+				<!-- CONTENEDOR PRINCIPAL -->
+
+				<!-- CONTENEDOR DE FORMULARIO -->
+             	<field id="active" translate="label" type="select" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="0"> 
+                    <label>Enabled</label>
+					<source_model>Magento\Config\Model\Config\Source\Yesno</source_model> 
+                </field> 
+
+               	<field id="title" translate="label" type="text" sortOrder="1" showInDefault="1" showInWebsite="1" showInStore="1">
+					<label>Title</label>
+					<config_path>payment/efipay_payment/title</config_path>
+					<validate>required-entry</validate>
+				</field>
+                
+				<field id="order_status" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" canRestore="1">
+                    <label>New Order Status</label>
+                    <source_model>Magento\Sales\Model\Config\Source\Order\Status\NewStatus</source_model>
+                </field>
+
+                <field id="sort_order" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0"> 
+                    <label>Sort Order</label> 
+                </field> 
+
+                <field id="allowspecific" translate="label" type="allowspecific" sortOrder="50" showInDefault="1" showInWebsite="1" showInStore="0"> 
+                    <label>Payment from Applicable Countries</label><source_model>Magento\Payment\Model\Config\Source\Allspecificcountries</source_model> 
+                </field> 
+
+                <field id="specificcountry" translate="label" type="multiselect" sortOrder="51" showInDefault="1" showInWebsite="1" showInStore="0"> 
+                    <label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model> 
+                </field> 
+				<!-- CONTENEDOR DE FORMULARIO -->
+                <field id="webhook_token" translate="label" sortOrder="4" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <!-- <frontend_model>Efipay\Payment\Block\Adminhtml\Form\Field\WebhookToken</frontend_model> -->
+                    <!-- <attribute type="shared">1</attribute> -->
+					<label>Webhook Token</label>
+					<config_path>payment/efipay_payment/webhook_token</config_path>
+					<validate>required-entry</validate>
+                </field>
+                <field id="efipay_api_key" translate="label" sortOrder="4" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <!-- <frontend_model>Efipay\Payment\Block\Adminhtml\Form\Field\ApiKey</frontend_model>
+                    <attribute type="shared">1</attribute> -->
+					  <!-- <attribute type="shared">1</attribute> -->
+					<label>Api Key Efipay</label>
+					<config_path>payment/efipay_payment/api_key_efipay</config_path>
+					<validate>required-entry</validate>
+                </field>
+				<field id="sucursal_id" translate="label" sortOrder="4" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <!-- <frontend_model>Efipay\Payment\Block\Adminhtml\Form\Field\SucursalId</frontend_model>
+                    <attribute type="shared">1</attribute> -->
+					  <!-- <attribute type="shared">1</attribute> -->
+					<label>Sucursal Id Efipay</label>
+					<config_path>payment/efipay_payment/sucursal_id_efipay</config_path>
+					<validate>required-entry</validate>
+                </field>
+				<!-- CONTENEDOR DE FORMULARIO -->
+				<field id="model"></field>
+            </group>
+        </section>
+    </system>
+</config> 

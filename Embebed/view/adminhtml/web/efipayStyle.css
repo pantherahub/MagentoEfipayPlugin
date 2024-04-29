@@ -1,0 +1,39 @@
+/**
+ * Copyright © Magento, Inc. All rights reserved.
+ * See COPYING.txt for license details.
+ */
+
+
+.efipay-other-section .button-container {
+	float: right;
+	margin: 1rem 0 0 !important;
+}
+.efipay-other-section > .entry-edit-head > a::before {
+	left: auto !important;
+	right: 1.3rem !important;
+}
+.efipay-other-section .heading {  
+	background: url(images/IsotipoEfipay.png) no-repeat 0 0% / 18rem auto;
+	padding-left: 20rem;
+	background-size: 200px;
+	background-position: left center;
+}
+.row-heading{
+	margin-top: -25px;
+    margin-left: 20px;
+}
+ 
+strong.text-right {
+    text-align: right;
+    margin-top: -20px;
+}
+
+.logos{
+	display: flex;
+	flex-wrap: wrap;
+	gap: 15px;
+	justify-content: center;
+	padding-bottom: 3rem !important;
+	max-width: 600px !important;
+	margin: auto;
+}

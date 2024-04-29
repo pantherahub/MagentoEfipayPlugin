@@ -1,0 +1,17 @@
+<?xml version="1.0" ?>
+<config xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="urn:magento:module:Magento_Store:etc/config.xsd">
+ 	<default>
+		<payment>
+			<efipaypayment_embebed>
+				<active>1</active>
+				<title>Efipay Payment Embebed</title>
+				<payment_action>autorize_capture</payment_action>
+				<model>EfipayPaymentEmbebedAdapter</model>
+				<can_use_checkout>1</can_use_checkout>
+				<can_capture>1</can_capture>
+				<can_autorize>1</can_autorize>
+				<cctypes>AE,VI,MC,DI,JBC, DN</cctypes>
+			</efipaypayment_embebed>
+		</payment>
+	</default>
+</config>
