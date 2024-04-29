@@ -1,7 +1,24 @@
 {
-    "name": "EfipayPayments/Embebed",
-    "description": "Payments with credit cards efipay",
+    "name": "efipay/efipay-payment-embebed",
+    "description": "Descripción de tu proyecto",
+    "type": "project",
     "require": {
-        "php": ">=7.4",
+        "magento/product-community-edition": "^2.4"
+    },
+    "autoload": {
+        "psr-4": {
+            "Nombre\\Espacio\\De\\Clase\\": "EfipayPayment/Embebed/"
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "repositories": [
+        {
+            "type": "composer",
+            "url": "https://github.com/pantherahub/MagentoEfipayPlugin/"
+        }
+    ],
+    "extra": {
+        "magento-force": "override"
     }
 }
