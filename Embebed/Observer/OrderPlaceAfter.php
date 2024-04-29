@@ -1,38 +1,43 @@
 <?php
 namespace EfipayPayment\Embebed\Observer;
 
+use EfipayPayment\Embebed\Helper\Data;
 use Magento\Framework\Event\ObserverInterface;
 use Magento\Framework\HTTP\Client\Curl;
 use Magento\Framework\Message\Manager;
+use Magento\Sales\Api\Data\OrderInterface;
+use Magento\Sales\Api\OrderManagementInterface;
+use Magento\Sales\Model\OrderRepository;
+use Magento\Sales\Model\Status;
 
 class OrderPlaceAfter implements ObserverInterface
 {
-    private \Magento\Framework\App\ResponseInterface $response;
-    private \Magento\Sales\Model\Order $order;
     private \Magento\Checkout\Model\Session $checkoutSession;
     private Curl $curl;
-    private Manager $messageManager;
-    private \Magento\Framework\UrlInterface $url;
-    private \Efipay\Payment\Helper\Data $helper;
+    private string $url;
+    private Data $helper;
     private string $baseUrl;
+    private OrderManagementInterface $orderManagement;
+    private OrderRepository $orderRepository;
 
     public function __construct(
         \Magento\Framework\UrlInterface $url,
         \Magento\Framework\App\ResponseInterface $response,
         \Magento\Sales\Model\Order $order,
         \Magento\Checkout\Model\Session $checkoutSession,
-        \Efipay\Payment\Helper\Data $helper,
+        Data $helper,
         Curl $curl,
-        Manager $messageManager
+        Manager $messageManager,
+        OrderManagementInterface $orderManager,
+        OrderRepository $orderRepository,
     ) {
-        $this->response = $response;
-        $this->order = $order;
         $this->checkoutSession = $checkoutSession;
         $this->curl = $curl;
-        $this->messageManager = $messageManager;
-        $this->url = $url;
+        $this->url = $url->getUrl();
         $this->helper = $helper;
         $this->baseUrl = 'https://sag.efipay.co/api/v1/payment';
+        $this->orderManagement = $orderManager;
+        $this->orderRepository = $orderRepository;
     }
 
     public function execute(\Magento\Framework\Event\Observer $observer)
@@ -82,20 +87,35 @@ class OrderPlaceAfter implements ObserverInterface
         $this->checkoutSession->setBillingStreet($billingstreet);
         $this->checkoutSession->setCountryCode('CO');
 
-        $response = $this->sendRequestEfipay($orders, $ordernId, $payment);
+        $response = $this->sendRequestEfipay($payment);
         if($response['status'] === 200){
-            return true;
+            return $this->markOrderAsPaid($ordernId);
+        }
+    }
+
+    public function markOrderAsPaid($orderId)
+    {
+        try {
+            $order = $this->orderRepository->get($orderId);
+            $order->setState('complete');
+            $order->setStatus('complete');
+
+            // Guardar el cambio en la base de datos
+            $this->orderRepository->save($order);
+
+            return true; // Pedido marcado como pagado correctamente
+        } catch (\Exception $e) {
+            return false; // Error al marcar el pedido como pagado
         }
     }
 
 
     /**
      * Send request to another URL
-     * @param $ordernId
      * @param $payment
      * @return array|string
      */
-    protected function sendRequestEfipay($ordernId, $payment)
+    protected function sendRequestEfipay($payment): array|string
     {
 
         try {
@@ -103,6 +123,7 @@ class OrderPlaceAfter implements ObserverInterface
             $sucursalIdEfipay = $this->helper->getConfig('payment/efipay_payment/sucursal_id_efipay');
 
             $url = $this->baseUrl.'/generate-payment';
+            $urlStore = $this->url;
             $requestData = [
                 "payment" => [
                     "description" => 'Pago Plugin Magento',
@@ -113,10 +134,10 @@ class OrderPlaceAfter implements ObserverInterface
                 "advanced_options" => [
                     "limit_date" => date('Y-m-d', strtotime('+1 day')),
                     "references" => [
-                        "".$ordernId.""
+                        $this->checkoutSession->getOrderId()
                     ],
                     "result_urls" => [
-                        "webhook" => $this->url.'rest/V1/efipay/webhook'
+                        "webhook" => $urlStore.'rest/V1/efipay/webhook'
                     ],
                     "has_comments" => true,
                     "comment_label" => "Pago Plugin Magento"
@@ -130,12 +151,12 @@ class OrderPlaceAfter implements ObserverInterface
             ];
             $this->curl->setOption(CURLOPT_HTTPHEADER, $headers);
             $this->curl->post($url, json_encode($requestData));
-            $responsePayment = $this->curl->getBody();
+            $responsePayment = json_decode($this->curl->getBody());
             $statusCode = $this->curl->getStatus();
             if ($statusCode === 200) {
-                return $this->checkPaymentCheckout(json_decode($responsePayment), $payment);
+                return $this->checkPaymentCheckout($responsePayment, $payment);
             } else {
-                $errorMessage = 'los datos proporcionados en tu configuración son erroneos: ' . $statusCode . $responsePayment;
+                $errorMessage = 'los datos proporcionados en tu configuración son erroneos o el pago fue rechazado';
                 throw new \Exception($errorMessage);
             }
         }catch (\Exception $e){
@@ -148,7 +169,6 @@ class OrderPlaceAfter implements ObserverInterface
 
         $url = $this->baseUrl.'/transaction-checkout';
         $apiKeyEfipay = $this->helper->getConfig('payment/efipay_payment/api_key_efipay');
-        $sucursalIdEfipay = $this->helper->getConfig('payment/efipay_payment/sucursal_id_efipay');
         $name = $this->checkoutSession->getFirstName() . $this->checkoutSession->getLastName();
         $data = $payment->get('additional_data')['additional_information'];
         $expirationDate = date("Y-m", strtotime($data['cc_exp_year']."-".$data['cc_exp_month']));;
@@ -182,7 +202,7 @@ class OrderPlaceAfter implements ObserverInterface
 
         $this->curl->setOption(CURLOPT_HTTPHEADER, $headers);
         $this->curl->post($url, json_encode($requestData));
-        $responseCheckout = $this->curl->getBody();
+        $responseCheckout = json_decode($this->curl->getBody());
         $statusCode = $this->curl->getStatus();
         return [
             'response' => $responseCheckout,
