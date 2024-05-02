@@ -13,10 +13,10 @@ class Description extends AbstractBlock implements RendererInterface
     {
         $this->_dir = $dir;
     }
-    
+
     public function render(AbstractElement $element)
     {
-        $html = '<div class="section-config with-button""> 
+        $html = '<div class="section-config with-button"">
                     <div class="config-heading">
                         <div class="row-heading">
 							<div class="logos">
@@ -54,7 +54,7 @@ class Description extends AbstractBlock implements RendererInterface
 								<img src="https://efipay.co/images/brands/su red.svg" alt="su red.svg" width="70" height="30" class="object-fit-contain">
 							</div>
 							<div>
-								<small>'.MPEFIPAY_PLUGIN_VERSION.'</small>
+								<small>v1.0.0</small>
 								<strong class="text-right">
 									<a class="link-more" href="https://sag.efipay.co/docs/1.0/magento-integration" target="_blank"> Documentación Efipay </a>
 								</strong>
