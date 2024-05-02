@@ -60,6 +60,7 @@ class DataAssingObserver extends AbstractDataAssignObserver
 
         foreach ($this->addInformationList as $addInformationKey) {
             if (isset($additionalData[$addInformationKey])) {
+                $paymentInfo->setData($addInformationKey, $additionalData[$addInformationKey]);
                 $paymentInfo->setAdditionalInformation(
                     $addInformationKey,
                     ($additionalData[$addInformationKey]) ?: null

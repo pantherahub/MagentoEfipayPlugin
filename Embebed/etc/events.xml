@@ -4,16 +4,13 @@
 		<observer name="EfipayPayment\Embebed\Observer\DataAssingObserver" instance="EfipayPayment\Embebed\Observer\DataAssingObserver" />
 	</event>
 
-<!--    <event name="checkout_onepage_controller_success_action">-->
-<!--        <observer name="efipaypayment_embebed_controller_success_action" instance="EfipayPayment\Embebed\Observer\OrderPlaceAfter"  />-->
-<!--    </event>-->
-
     <event name="sales_order_place_after">
         <observer name="efipaypayment_embebed_sales_order_place_after" instance="EfipayPayment\Embebed\Observer\OrderPlaceAfter"  />
     </event>
-
-<!--    <event name="sales_order_save_after">-->
-<!--        <observer name="efipaypayment_embebed_sales_order_save_after" instance="EfipayPayment\Embebed\Observer\SalesOrderSaveObserver" />-->
-<!--    </event>-->
-
+    <event name="sales_order_save_before">
+        <observer name="payment_sales_order_save_before" instance="Magento\Payment\Observer\SalesOrderBeforeSaveObserver" />
+    </event>
+    <event name="sales_order_status_unassign">
+        <observer name="sales_order_status_update" instance="Magento\Payment\Observer\UpdateOrderStatusForPaymentMethodsObserver" />
+    </event>
 </config>
