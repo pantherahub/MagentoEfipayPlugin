@@ -132,6 +132,10 @@ class OrderPlaceAfter implements ObserverInterface
         if($responseRequestPayment['status'] === 'Aprobada'){
             $this->messageManager->addSuccessMessage(__('¡Transacción '. $responseRequestPayment['status'] .'!'));
             return 'Payment Successful';
+        }elseif($responseRequestPayment['status'] === 401){
+            $message = __('Tus credenciales de acceso son erroneas, revisa tu configuracion e intenta de nuevo');
+            $this->messageManager->addErrorMessage($message);
+            throw new LocalizedException($message);
         }else{
             $message = __('¡Transacción '. $responseRequestPayment['status'] .'! Por favor, inténtalo de nuevo.');
             $this->messageManager->addErrorMessage($message);
