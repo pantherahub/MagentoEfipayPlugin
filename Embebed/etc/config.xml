@@ -4,7 +4,7 @@
 		<payment>
 			<efipaypayment_embebed>
 				<active>1</active>
-				<title>Efipay Payment Embebed</title>
+				<title>Efipay Payments credit/debit</title>
 				<payment_action>autorize_capture</payment_action>
 				<model>EfipayPaymentEmbebedAdapter</model>
 				<can_use_checkout>1</can_use_checkout>
