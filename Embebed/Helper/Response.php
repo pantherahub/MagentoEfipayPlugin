@@ -12,7 +12,6 @@ class Response extends AbstractHelper
      */
     public function generateResponse($response, $statusCode)
     {
-//        dd($response, $statusCode);
         if($statusCode == 200){
             return $this->isSuccessResponse($response, $statusCode);
         }else{

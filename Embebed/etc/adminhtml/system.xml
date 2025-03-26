@@ -30,14 +30,6 @@
                     <source_model>Magento\Sales\Model\Config\Source\Order\Status\NewStatus</source_model>
                 </field>
 
-                <field id="environment" translate="label" type="select" sortOrder="20" showInDefault="1" showInWebsite="1" canRestore="1">
-                    <label>Entorno</label>
-                    <config_path>payment/efipay_payment/environment</config_path>
-                    <validate>required-entry</validate>
-                    <source_model>EfipayPayment\Embebed\Model\Config\Environment</source_model>
-
-                </field>
-
                 <field id="sort_order" translate="label" type="text" sortOrder="100" showInDefault="1" showInWebsite="1" showInStore="0">
                     <label>Sort Order</label>
                 </field>
@@ -50,6 +42,11 @@
                     <label>Payment from Specific Countries</label><source_model>Magento\Directory\Model\Config\Source\Country</source_model>
                 </field>
 				<!-- CONTENEDOR DE FORMULARIO -->
+                <field id="limit_date_payment" translate="label" type="checkbox" sortOrder="1" showInDefault="1" showInWebsite="0" showInStore="0">
+                    <label>Habilitar límite de fecha de pago a 1 día</label>
+                    <config_path>payment/efipay_payment/limit_date_payment</config_path>
+                    <validate>required-entry</validate>
+                </field>
                 <field id="webhook_token" translate="label" sortOrder="4" showInDefault="1" showInWebsite="0" showInStore="0">
                     <!-- <frontend_model>Efipay\Payment\Block\Adminhtml\Form\Field\WebhookToken</frontend_model> -->
                     <!-- <attribute type="shared">1</attribute> -->

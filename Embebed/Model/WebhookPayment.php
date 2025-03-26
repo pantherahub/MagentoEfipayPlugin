@@ -2,6 +2,7 @@
 
 namespace EfipayPayment\Embebed\Model;
 
+use Magento\Sales\Model\Order;
 use EfipayPayment\Embebed\Helper\Data;
 use Magento\Sales\Model\OrderRepository;
 
@@ -34,8 +35,30 @@ class WebhookPayment
             $orderId = $checkout['payment_gateway']['advanced_option']['references'][0];
             $order = $this->orderRepository->get($orderId);
             if($order){
-                $order->setState('processing');
-                $order->setStatus('success');
+                switch ($transaction['status']) {
+                    case 'Aprobada':
+                        $order->setState(Order::STATE_PROCESSING)
+                            ->setStatus(Order::STATE_PROCESSING);
+                        break;
+                    case 'Iniciada':
+                    case 'Pendiente':
+                    case 'Por Pagar':
+                        $order->setState(Order::STATE_PENDING_PAYMENT)
+                                ->setStatus(Order::STATE_PENDING_PAYMENT);
+                        break;
+        
+                    case 'Reversada':
+                    case 'Reversion Escalada':
+                        $order->setState(Order::STATE_CLOSED)
+                                ->setStatus(Order::STATE_CLOSED);
+                        break;
+        
+                    default:
+                        $order->setState(Order::STATE_CANCELED)
+                            ->setStatus(Order::STATE_CANCELED);
+                        break;
+                }
+
                 $this->orderRepository->save($order);
                 return true;
             }else{

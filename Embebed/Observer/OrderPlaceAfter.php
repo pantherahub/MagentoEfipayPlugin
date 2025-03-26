@@ -31,7 +31,8 @@ class OrderPlaceAfter implements ObserverInterface
     private string $baseUrl;
     private ManagerInterface $messageManager;
     private RedirectInterface $redirect;
-
+    private $limit_date_payment;
+    private OrderRepository $orderRepository;
     /**
      * @throws LocalizedException
      */
@@ -55,6 +56,8 @@ class OrderPlaceAfter implements ObserverInterface
         $this->helper = $helper;
         $this->messageManager = $messageManager;
         $this->redirect = $redirect;
+        $this->limit_date_payment = $this->helper->getConfig('payment/efipay_payment/limit_date_payment');
+        $this->orderRepository = $orderRepository;
 
         $api_key_efipay = $this->helper->getConfig('payment/efipay_payment/api_key_efipay');
         if($api_key_efipay == ''){
@@ -62,8 +65,7 @@ class OrderPlaceAfter implements ObserverInterface
             $this->messageManager->addErrorMessage($message);
             throw new LocalizedException($message);
         }
-        $env = $this->helper->getConfig('payment/efipay_payment/environment');
-        $this->baseUrl = 'https://'. ($env == 'prod' ? 'sag-efipay.co' : 'efipay-sag.redpagos.co') .'/api/v1';
+        $this->baseUrl = 'https://sag.efipay.co/api/v1';
 
         $headers = [
             'Content-Type: application/json',
@@ -129,6 +131,31 @@ class OrderPlaceAfter implements ObserverInterface
         $this->checkoutSession->setBillingState($billingstate);
 
         $responseRequestPayment = $this->sendRequestEfipay($payment);
+
+        switch ($responseRequestPayment['status']) {
+            case 'Aprobada':
+                $orders->setState(Order::STATE_PROCESSING)
+                    ->setStatus(Order::STATE_PROCESSING);
+                break;
+            case 'Iniciada':
+            case 'Pendiente':
+            case 'Por Pagar':
+                $orders->setState(Order::STATE_PENDING_PAYMENT)
+                        ->setStatus(Order::STATE_PENDING_PAYMENT);
+                break;
+
+            case 'Reversada':
+            case 'Reversion Escalada':
+                $orders->setState(Order::STATE_CLOSED)
+                        ->setStatus(Order::STATE_CLOSED);
+                break;
+
+            default:
+                $orders->setState(Order::STATE_CANCELED)
+                    ->setStatus(Order::STATE_CANCELED);
+                break;
+        }
+
         if($responseRequestPayment['status'] === 'Aprobada'){
             $this->messageManager->addSuccessMessage(__('¡Transacción '. $responseRequestPayment['status'] .'!'));
             return 'Payment Successful';
@@ -156,15 +183,16 @@ class OrderPlaceAfter implements ObserverInterface
         $urlStore = $this->url;
         $requestData = [
             "payment" => [
-                "description" => 'Pago Plugin Magento',
+                "description" => 'Pago del pedido Magento: '.$this->checkoutSession->getOrderId(),
                 "amount" => $this->checkoutSession->getAmount(),
                 "currency_type" => $this->checkoutSession->getCurrencyCode(),
                 "checkout_type" => "api"
             ],
             "advanced_options" => [
-                "limit_date" => date('Y-m-d', strtotime('+1 day')),
                 "references" => [
-                    $this->checkoutSession->getOrderId()
+                    $this->checkoutSession->getOrderId(),
+                    $this->checkoutSession->getEmail(),
+                    "Plugin Magento"
                 ],
                 "result_urls" => [
                     "webhook" => $urlStore.'rest/V1/efipay/webhook'
@@ -172,8 +200,13 @@ class OrderPlaceAfter implements ObserverInterface
                 "has_comments" => true,
                 "comment_label" => $this->checkoutSession->getDescription()
             ],
-            "office" => $sucursalIdEfipay
+            "office" => (int)$sucursalIdEfipay
         ];
+
+        if($this->limit_date_payment === 1 || $this->limit_date_payment === '1'){
+            $requestData['advanced_options']['limit_date'] = date('Y-m-d', strtotime('+1 day'));
+        }
+
         $this->curl->post($url, json_encode($requestData));
         $responsePayment = json_decode($this->curl->getBody());
         $statusCode = $this->curl->getStatus();
@@ -205,7 +238,8 @@ class OrderPlaceAfter implements ObserverInterface
         $expirationDate = date("Y-m", strtotime($data['cc_exp_year']."-".$data['cc_exp_month']));
         $postCode = str_replace('-', '', $this->checkoutSession->getBillingPostCode());
         $zipCode = intval($postCode);
-        $countryIso3 = $this->getCountryIso3($this->checkoutSession->getBillingCountryCode());
+        $countryInfo = $this->getCountryInfo($this->checkoutSession->getBillingCountryCode());
+
         $requestData = [
             "payment" => [
                 "id" => $responsePayment->payment_id,
@@ -219,18 +253,18 @@ class OrderPlaceAfter implements ObserverInterface
                 'city' => $this->checkoutSession->getBillingCity(),
                 'state' => $this->checkoutSession->getBillingState(),
                 'zip_code'  => $zipCode,
-                'country'  => $countryIso3,
+                'country'  => $countryInfo['iso3_code'],
             ],
             "payment_card" => [
                 "number" => intval($data['cc_number']),
                 "name" => $name,
                 "expiration_date" => $expirationDate,
                 "cvv" => $data['cc_cid'],
-                "identification_type" => "CC",
-                "id_number" => "342343243",
+                "identification_type" => "Otro",
+                "id_number" => "000000000",
                 "installments" => "1",
-                "dialling_code" => "+57",
-                "cellphone" => '3234568'
+                "dialling_code" => $countryInfo['dialling_code'],
+                "cellphone" => $this->checkoutSession->getPhoneNumber()
             ]
         ];
 
@@ -245,11 +279,11 @@ class OrderPlaceAfter implements ObserverInterface
         ];
     }
 
-    public function getCountryIso3($code)
+    public function getCountryInfo($code)
     {
         $url = $this->baseUrl.'/resources/get-countries';
         $this->curl->get($url);
         $responseCountry = json_decode($this->curl->getBody(), true);
-        return $responseCountry[$code]['iso3_code'];
+        return $responseCountry[$code];
     }
 }
